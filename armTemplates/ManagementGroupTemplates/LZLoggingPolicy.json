@@ -293,7 +293,7 @@
                 "description": "[variables('policyAssignmentName')]",
                 "displayName": "[variables('policyAssignmentName')]",
                 "scope": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'))]",
-                "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/bu1/providers/Microsoft.Authorization/policyDefinitions/Enforce-Logging-Definition",
+                "policyDefinitionId": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'), '/providers/Microsoft.Authorization/policyDefinitions/', variables('policyDefinitionName'))]",
                 "parameters": {
                     "workspaceName": {
                         "value": "[parameters('workspaceName')]"
@@ -326,7 +326,7 @@
         {
             "type": "Microsoft.PolicyInsights/remediations",
             "apiVersion": "2019-07-01",
-            "name": "ascRemediation",
+            "name": "loggingRemediation",
             "dependsOn": [
                 "[parameters('rbacGuid')]"
             ],
