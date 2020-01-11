@@ -322,6 +322,17 @@
                 "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', variables('rbacContributor'))]",
                 "principalId": "[toLower(reference(concat('/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName')), '2018-05-01', 'Full' ).identity.principalId)]"
             }
+        },
+        {
+            "type": "Microsoft.PolicyInsights/remediations",
+            "apiVersion": "2019-07-01",
+            "name": "ascRemediation",
+            "dependsOn": [
+                "[parameters('rbacGuid')]"
+            ],
+            "properties": {
+                "policyAssignmentId": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'), '/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName'))]"
+            }
         }
     ]
 }
