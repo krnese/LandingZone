@@ -1,0 +1,213 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mgmtGroupId": {
+            "type": "string",
+            "defaultValue": "armmsp"
+        },
+        "rbacGuid": {
+            "type": "string",
+            "defaultValue": "[newGuid()]",
+            "metadata": {
+                "description": "Generates a GUID during deployment runtime to assign RBAC"
+            }
+        },
+        "emailSecurityContact": {
+            "type": "string",
+            "defaultValue": "foo@bar.com",
+            "metadata": {
+                "description": "email address of the contact, in the form of john@doe.com"
+            }
+        },
+        "phoneSecurityContact": {
+            "type": "string",
+            "defaultValue": "423",
+            "metadata": {
+                "description": "phone number of the Security Contact"
+            }
+        }
+    },
+    "variables": {
+        "policyDefinitionName": "Enforce-ASC-Deployment",
+        "policyAssignmentName": "Enforce-ASC",
+        "rbacContributor": "b24988ac-6180-42a0-ab88-20f7382dd24c"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyDefinitionName')]",
+            "properties": {
+                "policyType": "custom",
+                "parameters": {
+                    "emailSecurityContact": {
+                        "type": "string"
+                    },
+                    "phoneSecurityContact": {
+                        "type": "string"
+                    }
+                },
+                "policyRule": {
+                    "if": {
+                        "allOf": [
+                            {
+                                "field": "type",
+                                "equals": "Microsoft.Resources/subscriptions"
+                            }
+                        ]
+                    },
+                    "then": {
+                        "effect": "deployIfNotExists",
+                        "details": {
+                            "type": "Microsoft.Security/policies",
+                            "deploymentScope": "Subscription",
+                            "existenceScope": "Subscription",
+                            "roleDefinitionIds": [
+                                "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+                            ],
+                            "existenceCondition": {
+                                "allOf": [
+                                    {
+                                        "field": "name",
+                                        "like": "default"
+                                    },
+                                    {
+                                        "field": "Microsoft.Security/policies/pricingConfiguration.selectedPricingTier",
+                                        "equals": "Standard"
+                                    }
+                                ]
+                            },
+                            "deployment": {
+                                "location": "westeurope",
+                                "properties": {
+                                    "mode": "incremental",
+                                    "parameters": {
+                                        "emailSecurityContact": {
+                                            "value": "[[parameters('emailSecurityContact')]"
+                                        },
+                                        "phoneSecurityContact": {
+                                            "value": "[[parameters('phoneSecurityContact')]"
+                                        }
+                                    },
+                                    "template": {
+                                        "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                                        "contentVersion": "1.0.0.0",
+                                        "parameters": {
+                                            "emailSecurityContact": {
+                                                "type": "string",
+                                                "metadata": {
+                                                    "description": "email address of the contact, in the form of john@doe.com"
+                                                }
+                                            },
+                                            "phoneSecurityContact": {
+                                                "type": "string",
+                                                "metadata": {
+                                                    "description": "phone number of the Security Contact"
+                                                }
+                                            }
+                                        },
+                                        "variables": {},
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.Security/securityContacts",
+                                                "name": "default1",
+                                                "apiVersion": "2017-08-01-preview",
+                                                "properties": {
+                                                    "email": "[[parameters('emailSecurityContact')]",
+                                                    "phone": "[[parameters('phoneSecurityContact')]",
+                                                    "alertNotifications": "On",
+                                                    "alertsToAdmins": "On"
+                                                }
+                                            },
+                                            {
+                                                "type": "Microsoft.Security/policies",
+                                                "apiVersion": "2015-06-01-preview",
+                                                "name": "default",
+                                                "properties": {
+                                                    "policyLevel": "Subscription",
+                                                    "name": "default",
+                                                    "unique": "Off",
+                                                    "logCollection": "Off",
+                                                    "recommendations": {
+                                                        "patch": "On",
+                                                        "baseline": "On",
+                                                        "antimalware": "On",
+                                                        "diskEncryption": "On",
+                                                        "acls": "On",
+                                                        "nsgs": "On",
+                                                        "waf": "On",
+                                                        "sqlAuditing": "On",
+                                                        "sqlTde": "On",
+                                                        "ngfw": "On",
+                                                        "vulnerabilityAssessment": "On",
+                                                        "storageEncryption": "On",
+                                                        "jitNetworkAccess": "On"
+                                                    },
+                                                    "pricingConfiguration": {
+                                                        "selectedPricingTier": "Standard"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "outputs": {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+                {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyAssignmentName')]",
+            "location": "[deployment().location]",
+            "dependsOn": [
+                "[variables('policyDefinitionName')]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "description": "[variables('policyAssignmentName')]",
+                "displayName": "[variables('policyAssignmentName')]",
+                "scope": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'))]",
+                "policyDefinitionId": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'), '/providers/Microsoft.Authorization/policyDefinitions/', variables('policyDefinitionName'))]",
+                "parameters": {
+                    "emailSecurityContact": {
+                        "value": "[parameters('emailSecurityContact')]"
+                    },
+                    "phoneSecurityContact": {
+                        "value":"[parameters('phoneSecurityContact')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2019-04-01-preview",
+            "name": "[parameters('rbacGuid')]",
+            "dependsOn": [
+                "[variables('policyAssignmentName')]"
+            ],
+            "properties": {
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', variables('rbacContributor'))]",
+                "principalId": "[toLower(reference(concat('/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName')), '2018-05-01', 'Full' ).identity.principalId)]"
+            }
+        },
+        {
+            "type": "Microsoft.PolicyInsights/remediations",
+            "apiVersion": "2019-07-01",
+            "name": "ascRemediation",
+            "dependsOn": [
+                "[parameters('rbacGuid')]"
+            ],
+            "properties": {
+                "policyAssignmentId": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'), '/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName'))]"
+            }
+        }
+    ]
+}
