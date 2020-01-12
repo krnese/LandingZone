@@ -15,17 +15,22 @@
         },
         "emailSecurityContact": {
             "type": "string",
-            "defaultValue": "foo@bar.com",
             "metadata": {
                 "description": "email address of the contact, in the form of john@doe.com"
             }
         },
         "phoneSecurityContact": {
             "type": "string",
-            "defaultValue": "423",
             "metadata": {
                 "description": "phone number of the Security Contact"
             }
+        },
+        "enforceLzGoalState": {
+            "type": "string",
+            "allowedValues": [
+                "Yes",
+                "No"
+            ]
         }
     },
     "variables": {
@@ -199,6 +204,7 @@
             }
         },
         {
+            "condition": "[equals(parameters('enforceLzGoalState'), 'Yes')]",
             "type": "Microsoft.PolicyInsights/remediations",
             "apiVersion": "2019-07-01",
             "name": "ascRemediation",
