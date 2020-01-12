@@ -52,7 +52,7 @@
             "name": "[concat(deployment().name, '-logs-', parameters('rgLocation')[copyIndex()])]",
             "resourceGroup": "[concat(parameters('rgName'), '-', parameters('rgLocation')[copyIndex()])]",
             "dependsOn": [
-                "[resourceId('Microsoft.Resources/resourceGroups/', parameters('rgName')[copyIndex()])]"
+                "rgCopy"
             ],
             "copy": {
                 "name": "deploymentCopy",
