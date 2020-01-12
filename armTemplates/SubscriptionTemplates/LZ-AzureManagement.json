@@ -50,7 +50,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
             "name": "[concat(deployment().name, parameters('rgLocation')[copyIndex()])]",
-            "resourceGroup": "[parameters('rgName')]",
+            "resourceGroup": "[concat(parameters('rgName'), '-', parameters('rgLocation')[copyIndex()])]",
             "dependsOn": [
                 "[resourceId('Microsoft.Resources/resourceGroups/', parameters('rgName')[copyIndex()])]"
             ],
