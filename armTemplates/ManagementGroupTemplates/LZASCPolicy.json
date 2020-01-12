@@ -3,8 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "mgmtGroupId": {
-            "type": "string",
-            "defaultValue": "armmsp"
+            "type": "string"
         },
         "rbacGuid": {
             "type": "string",

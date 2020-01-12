@@ -19,14 +19,12 @@
         },
         "workspaceRegion": {
             "type": "string",
-            "defaultValue": "westeurope",
             "metadata": {
                 "description": "Select Azure region for Log Analytics"
             }
         },
         "automationRegion": {
             "type": "string",
-            "defaultValue": "westeurope",
             "metadata": {
                 "description": "Select Azure region for Automation account"
             }

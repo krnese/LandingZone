@@ -3,30 +3,19 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "workspaceName": {
-            "type": "string",
-            "defaultValue": "knws01"
+            "type": "string"
         },
         "automationAccountName": {
-            "type": "string",
-            "defaultValue": "knaa01"
+            "type": "string"
         },
         "rgName": {
-            "type": "string",
-            "defaultValue": "logger"
+            "type": "string"
         },
         "rgLocation": {
-            "type": "array",
-            "defaultValue": [
-                "westeurope",
-                "northeurope"
-            ]
+            "type": "array"
         },
         "lzTags": {
-            "type": "object",
-            "defaultValue": {
-                "Deployment": "AzureLandingZone",
-                "Version": "1.0.0.0"
-            }
+            "type": "object"
         }
     },
     "variables": {

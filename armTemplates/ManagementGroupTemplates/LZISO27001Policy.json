@@ -4,7 +4,6 @@
     "parameters": {
         "mgmtGroupId": {
             "type": "string",
-            "defaultValue": "lz-businessunits",
             "metadata": {
                 "description": "Provide the management group id, where this policy will be assigned."
             }
@@ -71,8 +70,7 @@
             "allowedValues": [
                 "Yes",
                 "No"
-            ],
-            "defaultValue": "Yes"
+            ]
         }
     },
     "variables": {
