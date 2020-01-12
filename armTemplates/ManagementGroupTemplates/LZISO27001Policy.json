@@ -1,0 +1,115 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mgmtGroupId": {
+            "type": "string",
+            "defaultValue": "lz-businessunits",
+            "metadata": {
+                "description": "Provide the management group id, where this policy will be assigned."
+            }
+        },
+        "listOfResourceTypesWithDiagnosticLogsEnabled": {
+            "type": "array",
+            "defaultValue": [
+                "Microsoft.AnalysisServices/servers",
+                "Microsoft.ApiManagement/service",
+                "Microsoft.Network/applicationGateways",
+                "Microsoft.Automation/automationAccounts",
+                "Microsoft.ContainerInstance/containerGroups",
+                "Microsoft.ContainerRegistry/registries",
+                "Microsoft.ContainerService/managedClusters",
+                "Microsoft.Batch/batchAccounts",
+                "Microsoft.Cdn/profiles/endpoints",
+                "Microsoft.CognitiveServices/accounts",
+                "Microsoft.DocumentDB/databaseAccount",
+                "Microsoft.DataFactory/factories",
+                "Microsoft.DataLakeAnalytics/accounts",
+                "Microsoft.DataLakeStore/accounts",
+                "Microsoft.EventGrid/eventSubscriptions",
+                "Microsoft.EventGrid/topics",
+                "Microsoft.EventHub/namespaces",
+                "Microsoft.Network/expressRouteCircuits",
+                "Microsoft.Network/azureFirewalls",
+                "Microsoft.Devices/IotHubs",
+                "Microsoft.KeyVault/vaults",
+                "Microsoft.Network/loadBalancers",
+                "Microsoft.Logic/integrationAccounts",
+                "Microsoft.Logic/workflows",
+                "Microsoft.DBforMySQL/servers",
+                "Microsoft.Network/networkInterfaces",
+                "Microsoft.Network/networkSecurityGroups",
+                "Microsoft.DBforPostgreSQL/servers",
+                "Microsoft.PowerBIDedicated/capacities",
+                "Microsoft.Network/publicIPAddresses",
+                "Microsoft.RecoveryServices/vaults",
+                "Microsoft.Cache/redis",
+                "Microsoft.Relay/namespaces",
+                "Microsoft.Search/searchServices",
+                "Microsoft.ServiceBus/namespaces",
+                "Microsoft.SignalRService/SignalR",
+                "Microsoft.Sql/servers/databases",
+                "Microsoft.Sql/servers/elasticPools",
+                "Microsoft.StreamAnalytics/streamingjobs",
+                "Microsoft.TimeSeriesInsights/environments",
+                "Microsoft.Network/trafficManagerProfiles",
+                "Microsoft.Compute/virtualMachines",
+                "Microsoft.Compute/virtualMachineScaleSets",
+                "Microsoft.HDInsight/clusters",
+                "Microsoft.Network/virtualNetworks",
+                "Microsoft.Network/virtualNetworkGateways"
+            ],
+            "metadata": {
+                "description": "Provide the list of resource types that should be audited for diagnostics for the landing zone(s)."
+            }
+        },
+        "rbacGuid": {
+            "type": "string",
+            "defaultValue": "[newGuid()]",
+            "metadata": {
+                "description": "Guid to create role assignment for the managed identity."
+            }
+        }
+    },
+    "variables": {
+        "policyDefinitionId": "89c6cddc-1c73-4ac1-b19c-54d1a15a42f2",
+        "policyAssignmentName": "LZ-ISO-27001",
+        "rbacContributor": "b24988ac-6180-42a0-ab88-20f7382dd24c"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2019-09-01",
+            "name": "[variables('policyAssignmentName')]",
+            "location": "[deployment().location]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "description": "Audit ISO 27001:2013 controls and deploy specific VM Extensions to support audit requirements",
+                "displayName": "[variables('policyAssignmentName')]",
+                "scope": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'))]",
+                "policyDefinitionId": "[concat('/providers/Microsoft.Authorization/policySetDefinitions/', variables('policyDefinitionId'))]",
+                "parameters": {
+                    "listOfResourceTypesWithDiagnosticLogsEnabled": {
+                        "value": "[parameters('listOfResourceTypesWithDiagnosticLogsEnabled')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2019-04-01-preview",
+            "name": "[parameters('rbacGuid')]",
+            "dependsOn": [
+                "[variables('policyAssignmentName')]"
+            ],
+            "properties": {
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', variables('rbacContributor'))]",
+                "principalId": "[toLower(reference(concat('/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName')), '2018-05-01', 'Full' ).identity.principalId)]"
+            }
+        }
+    ],
+    "outputs": {}
+}

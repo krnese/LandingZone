@@ -30,7 +30,7 @@
     },
     "variables": {
         "policyDefinitionName": "Enforce-ASC-Deployment",
-        "policyAssignmentName": "Enforce-ASC",
+        "policyAssignmentName": "LZ-Enforce-ASC",
         "rbacContributor": "b24988ac-6180-42a0-ab88-20f7382dd24c"
     },
     "resources": [
@@ -159,7 +159,7 @@
                 }
             }
         },
-                {
+        {
             "type": "Microsoft.Authorization/policyAssignments",
             "apiVersion": "2018-05-01",
             "name": "[variables('policyAssignmentName')]",
@@ -180,7 +180,7 @@
                         "value": "[parameters('emailSecurityContact')]"
                     },
                     "phoneSecurityContact": {
-                        "value":"[parameters('phoneSecurityContact')]"
+                        "value": "[parameters('phoneSecurityContact')]"
                     }
                 }
             }
