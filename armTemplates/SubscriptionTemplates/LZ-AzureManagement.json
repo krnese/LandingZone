@@ -1,0 +1,111 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspaceName": {
+            "type": "string",
+            "defaultValue": "knws"
+        },
+        "automationAccountName": {
+            "type": "string",
+            "defaultValue": "knaa01"
+        },
+        "rgName": {
+            "type": "string",
+            "defaultValue": "myrg"
+        },
+        "rgLocation": {
+            "type": "array"
+        },
+        "lzTags": {
+            "type": "object",
+            "defaultValue": {
+                "Deployment": "AzureLandingZone",
+                "Version": "1.0.0.0"
+            }
+        }
+    },
+    "variables": {
+        "omsTemplateLink": "[uri(deployment().properties.templateLink.uri, '../ResourceGroupTemplates/LZ-Logging.json')]",
+        "dashboardLink": "[uri(deployment().properties.templateLink.uri, '../ResourceGroupTemplates/LZ-Dashboard.json')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2018-05-01",
+            "location": "[parameters('rgLocation')[copyIndex()]]",
+            "name": "[concat(parameters('rgName'), '-', parameters('rgLocation')[copyIndex()])]",
+            "tags": "[parameters('lzTags')]",
+            "copy": {
+                "name": "rgCopy",
+                "count": "[length(parameters('rgLocation'))]"
+            },
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "[concat(deployment().name, parameters('rgName')[copyIndex()])]",
+            "resourceGroup": "[parameters('rgName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', parameters('rgName')[copyIndex()])]"
+            ],
+            "copy": {
+                "name": "deploymentCopy",
+                "count": "[length(parameters('rgLocation'))]"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('omsTemplateLink')]"
+                },
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[concat(parameters('workspaceName'), '-', parameters('rgLocation')[copyIndex()])]"
+                    },
+                    "workspaceRegion": {
+                        "value": "[parameters('rgLocation')[copyIndex()]]"
+                    },
+                    "automationAccountName": {
+                        "value": "[concat(parameters('automationAccountName'), '-', parameters('rgLocation')[copyIndex()])]"
+                    },
+                    "automationRegion": {
+                        "value": "[parameters('rgLocation')[copyIndex()]]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "[concat(deployment().name, 'lz-dashboard')]",
+            "resourceGroup": "[parameters('rgName')]",
+            "dependsOn": [
+                "mgmtDeployment"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('dashboardLink')]"
+                },
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[concat(parameters('workspaceName'), '-', parameters('rgLocation')[copyIndex()])]"
+                    },
+                    "automationAccountName": {
+                        "value": "[concat(parameters('automationAccountName'), '-', parameters('rgLocation')[copyIndex()])]"
+                    },
+                    "rgLocation": {
+                        "value": "[parameters('rgLocation')[copyIndex()]]"
+                    },
+                    "lzTags": {
+                        "value": "[parameters('lzTags')]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
