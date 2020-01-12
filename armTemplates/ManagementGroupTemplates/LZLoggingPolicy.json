@@ -3,28 +3,33 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "mgmtGroupId": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "armmsp"
         },
         "workspaceName": {
             "type": "string",
+            "defaultValue": "knlz123",
             "metadata": {
                 "description": "Provide suffix for Log Analytics workspace that will be created per subscription"
             }
         },
         "automationAccountName": {
             "type": "string",
+            "defaultValue": "knaa123",
             "metadata": {
                 "description": "Provide suffix for Automation account that will be crated per subscription"
             }
         },
         "workspaceRegion": {
             "type": "string",
+            "defaultValue": "westeurope",
             "metadata": {
                 "description": "Select Azure region for Log Analytics"
             }
         },
         "automationRegion": {
             "type": "string",
+            "defaultValue": "westeurope",
             "metadata": {
                 "description": "Select Azure region for Automation account"
             }
@@ -41,13 +46,14 @@
             "allowedValues": [
                 "Yes",
                 "No"
-            ]
+            ],
+            "defaultValue": "Yes"
         }
     },
     "variables": {
         "policyDefinitionName": "Enforce-Logging-Definition",
         "policyAssignmentName": "LZ-Enforce-Logging",
-        "rbacContributor": "b24988ac-6180-42a0-ab88-20f7382dd24c"
+        "rbacContributor": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
     },
     "resources": [
         {
