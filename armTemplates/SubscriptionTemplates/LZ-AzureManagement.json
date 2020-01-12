@@ -88,6 +88,10 @@
             "dependsOn": [
                 "deploymentCopy"
             ],
+            "copy": {
+                "name": "dashboardCopy",
+                "count": "[length(parameters('rgLocation'))]"
+            },
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
