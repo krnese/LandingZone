@@ -1,0 +1,41 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mgmtGroupId": {
+            "type": "string",
+            "metadata": {
+                "description": "Provide the management group id, where this policy will be assigned."
+            }
+        },
+        "allowedLocations": {
+            "type": "array",
+            "metadata": {
+                "description": "Provide an array of allowed locations for the landing zone(s)."
+            }
+        }
+    },
+    "variables": {
+        "policyDefinitionId": "e56962a6-4747-49cd-b67b-bf8b01975c4c",
+        "policyAssignmentName": "LZ-Locations"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2019-09-01",
+            "name": "[variables('policyAssignmentName')]",
+            "properties": {
+                "description": "Allowed locations for LZs",
+                "displayName": "[variables('policyAssignmentName')]",
+                "scope": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'))]",
+                "policyDefinitionId": "[concat('/providers/Microsoft.Authorization/policyDefinitions/', variables('policyDefinitionId'))]",
+                "parameters": {
+                    "listOfAllowedLocations": {
+                        "value": "[parameters('allowedLocations')]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs":{}
+}
