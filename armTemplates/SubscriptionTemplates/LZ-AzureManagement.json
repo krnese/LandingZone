@@ -83,10 +83,10 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
-            "name": "[concat(deployment().name, 'lz-dashboard')]",
+            "name": "[concat('dashboard', parameters('rgLocation')[copyIndex()])]",
             "resourceGroup": "[parameters('rgName')]",
             "dependsOn": [
-                "mgmtDeployment"
+                "deploymentCopy"
             ],
             "properties": {
                 "mode": "Incremental",
