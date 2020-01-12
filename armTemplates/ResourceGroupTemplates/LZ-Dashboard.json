@@ -24,7 +24,7 @@
         {
             "type": "Microsoft.Portal/dashboards",
             "apiVersion": "2015-08-01-preview",
-            "name": "mspControlCenterPreview",
+            "name": "AzureLandingZone",
             "location": "[parameters('rgLocation')]",
             "tags": "[parameters('lzTags')]",
             "properties": {
@@ -264,19 +264,6 @@
                                         }
                                     ],
                                     "type": "Extension/HubsExtension/PartType/BrowseBaseResourcesPinnedPart"
-                                }
-                            },
-                            "13": {
-                                "position": {
-                                    "x": 12,
-                                    "y": 3,
-                                    "colSpan": 2,
-                                    "rowSpan": 1
-                                },
-                                "metadata": {
-                                    "inputs": [],
-                                    "type": "Extension/Microsoft_Azure_CustomerHub/PartType/MyCustomersPart",
-                                    "defaultMenuItemId": "customers"
                                 }
                             },
                             "14": {
