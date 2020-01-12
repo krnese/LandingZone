@@ -4,7 +4,7 @@
     "parameters": {
         "workspaceName": {
             "type": "string",
-            "defaultValue": "knws"
+            "defaultValue": "knws01"
         },
         "automationAccountName": {
             "type": "string",
@@ -12,10 +12,14 @@
         },
         "rgName": {
             "type": "string",
-            "defaultValue": "myrg"
+            "defaultValue": "logger"
         },
         "rgLocation": {
-            "type": "array"
+            "type": "array",
+            "defaultValue": [
+                "westeurope",
+                "northeurope"
+            ]
         },
         "lzTags": {
             "type": "object",
