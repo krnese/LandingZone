@@ -7,7 +7,6 @@
         },
         "workspaceName": {
             "type": "string",
-            "defaultValue": "knlz123",
             "metadata": {
                 "description": "Provide suffix for Log Analytics workspace that will be created per subscription"
             }
