@@ -1,0 +1,27 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/tenantDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "targetMgId": {
+            "type": "string",
+            "defaultValue": "BU1",
+            "metadata": {
+                "description": "This is the root management group, and all management groups will be child to this one."
+            }
+        },
+        "subscriptionId": {
+            "type": "string",
+            "defaultValue": "e21ecca9-ad71-4633-80c3-d68637f0fa17"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Management/managementGroups/subscriptions",
+            "apiVersion": "2018-03-01-preview",
+            "name": "[concat(parameters('targetMgId'), '/', parameters('subscriptionId'))]",
+            "properties": {
+            }
+        }
+    ],
+    "outputs": {}
+}
