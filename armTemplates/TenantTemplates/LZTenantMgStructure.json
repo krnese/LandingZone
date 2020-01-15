@@ -41,7 +41,7 @@
     "resources": [
         {
             "type": "Microsoft.Management/managementGroups",
-            "apiVersion": "2018-03-01-preview",
+            "apiVersion": "2019-11-01",
             "name": "[parameters('platformMgs')[copyIndex()]]",
             "copy": {
                 "name": "mgCopy",
@@ -58,7 +58,7 @@
         },
         {
             "type": "Microsoft.Management/managementGroups",
-            "apiVersion": "2018-03-01-preview",
+            "apiVersion": "2019-11-01",
             "name": "[parameters('landingZoneMg')]",
             "properties": {
                 "displayName": "[parameters('landingZoneMg')]",
@@ -71,7 +71,7 @@
         },
         {
             "type": "Microsoft.Management/managementGroups",
-            "apiVersion": "2018-03-01-preview",
+            "apiVersion": "2019-11-01",
             "name": "[parameters('landingZonePortfolioMgs')[copyIndex()]]",
             "dependsOn": [
                 "[parameters('landingZoneMg')]"
