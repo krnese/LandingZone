@@ -8,8 +8,8 @@ param (
     Write-Host "Creating new subscription"
 
     $subscription = New-AzSubscription -Name $subscriptionDisplayName `
-                                        -OfferType $offerType `
-                                        -EnrollmentAccountObjectId (Get-AzureRmEnrollmentAccount)[0].ObjectId
+                                       -OfferType $offerType `
+                                       -EnrollmentAccountObjectId (Get-AzureRmEnrollmentAccount)[0].ObjectId
 
     Write-Host "Creating new subscription Success!"
 
