@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "mgmtGroupId": {
@@ -7,7 +7,7 @@
         },
         "rbacGuid": {
             "type": "string",
-            "defaultValue": "[newGuid()]",
+            "defaultValue": "[concat(guid('asc', parameters('mgmtGroupId')))]",
             "metadata": {
                 "description": "Generates a GUID during deployment runtime to assign RBAC"
             }
@@ -35,7 +35,7 @@
     "variables": {
         "policyDefinitionName": "Enforce-ASC-Deployment",
         "policyAssignmentName": "LZ-Enforce-ASC",
-        "rbacContributor": "b24988ac-6180-42a0-ab88-20f7382dd24c"
+        "rbacOwner": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
     },
     "resources": [
         {
@@ -198,7 +198,7 @@
             ],
             "properties": {
                 "principalType": "ServicePrincipal",
-                "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', variables('rbacContributor'))]",
+                "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', variables('rbacOwner'))]",
                 "principalId": "[toLower(reference(concat('/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName')), '2018-05-01', 'Full' ).identity.principalId)]"
             }
         },
