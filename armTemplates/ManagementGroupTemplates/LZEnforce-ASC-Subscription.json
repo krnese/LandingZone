@@ -7,7 +7,7 @@
         },
         "rbacGuid": {
             "type": "string",
-            "defaultValue": "[concat(guid('ascbuiltin', parameters('mgmtGroupId')))]"
+            "defaultValue": "[concat(guid('ascbuiltin', deployment().location))]"
         },
         "enforceLzGoalState": {
             "type": "string",
@@ -56,7 +56,7 @@
             "condition": "[equals(parameters('enforceLzGoalState'), 'Yes')]",
             "type": "Microsoft.PolicyInsights/remediations",
             "apiVersion": "2019-07-01",
-            "name": "loggingRemediation",
+            "name": "enforceASCRemediation",
             "dependsOn": [
                 "[parameters('rbacGuid')]"
             ],
