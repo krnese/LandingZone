@@ -92,10 +92,6 @@
                                     {
                                         "field": "type",
                                         "equals": "Microsoft.OperationalInsights/workspaces"
-                                    },
-                                    {
-                                        "field": "type",
-                                        "equals": "Microsoft.Insights/diagnosticSettings"
                                     }
                                 ]
                             },
