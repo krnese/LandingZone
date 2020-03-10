@@ -1,0 +1,239 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mgmtGroupId": {
+            "type": "string"
+        },
+        "workspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "Provide suffix for Log Analytics workspace that will be created per subscription"
+            }
+        },
+        "workspaceRegion": {
+            "type": "string",
+            "metadata": {
+                "description": "Select Azure region for Log Analytics"
+            }
+        },
+        "rbacGuid": {
+            "type": "string",
+            "defaultValue": "[concat(guid('logs', parameters('mgmtGroupId')))]",
+            "metadata": {
+                "description": "Generates a GUID during deployment runtime to assign RBAC"
+            }
+        },
+        "enforceLzGoalState": {
+            "type": "string",
+            "allowedValues": [
+                "Yes",
+                "No"
+            ],
+            "defaultValue": "Yes"
+        }
+    },
+    "variables": {
+        "policyDefinitionName": "Enforce-Logging-Definition",
+        "policyAssignmentName": "LZ-Enforce-Logging",
+        "rbacOwner": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyDefinitionName')]",
+            "properties": {
+                "displayName": "Enforce-Full-AzSubscription-Monitoring",
+                "mode": "All",
+                "policyType": "Custom",
+                "parameters": {
+                    "workspaceName": {
+                        "type": "string",
+                        "metadata": {
+                            "description": "Provide suffix for Log Analytics workspace that will be created per subscription"
+                        }
+                    },
+                    "workspaceRegion": {
+                        "type": "string",
+                        "metadata": {
+                            "description": "Select Azure region for Log Analytics"
+                        }
+                    }
+                },
+                "policyRule": {
+                    "if": {
+                        "allOf": [
+                            {
+                                "field": "type",
+                                "equals": "Microsoft.Subscription/subscriptions"
+                            }
+                        ]
+                    },
+                    "then": {
+                        "effect": "deployIfNotExists",
+                        "details": {
+                            "type": "Microsoft.Resources/resourceGroups",
+                            "deploymentScope": "Subscription",
+                            "existenceScope": "Subscription",
+                            "roleDefinitionIds": [
+                                "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+                            ],
+                            "existenceCondition": {
+                                "allOf": [
+                                    {
+                                        "field": "name",
+                                        "like": "[[concat(subscription().displayName, '-mgmt')]"
+                                    },
+                                    {
+                                        "field": "type",
+                                        "equals": "Microsoft.Resources/subscriptions/resourceGroups"
+                                    },
+                                    {
+                                        "field": "type",
+                                        "equals": "Microsoft.OperationalInsights/workspaces"
+                                    },
+                                    {
+                                        "field": "type",
+                                        "equals": "Microsoft.Insights/diagnosticSettings"
+                                    }
+                                ]
+                            },
+                            "deployment": {
+                                "location": "[deployment().location]",
+                                "properties": {
+                                    "mode": "incremental",
+                                    "parameters": {
+                                        "rgName": {
+                                            "value": "[[concat(subscription().displayName, '-mgmt')]"
+                                        },
+                                        "workspaceName": {
+                                            "value": "[[concat(subscription().displayName, parameters('workspaceName'))]"
+                                        },
+                                        "workspaceRegion": {
+                                            "value": "[[parameters('workspaceRegion')]"
+                                        }
+                                    },
+                                    "template": {
+                                        "$schema": "http://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json",
+                                        "contentVersion": "1.0.0.0",
+                                        "parameters": {
+                                            "rgName": {
+                                                "type": "string"
+                                            },
+                                            "workspaceName": {
+                                                "type": "string"
+                                            },
+                                            "workspaceRegion": {
+                                                "type": "string"
+                                            },
+                                            "rbacGuid": {
+                                                "type": "string",
+                                                "defaultValue": "[[newGuid()]"
+                                            }
+                                        },
+                                        "variables": {
+                                        },
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.Resources/resourceGroups",
+                                                "apiVersion": "2018-05-01",
+                                                "name": "[[parameters('rgName')]",
+                                                "location": "[[deployment().location]",
+                                                "properties": {}
+                                            },
+                                            {
+                                                "type": "Microsoft.Resources/deployments",
+                                                "apiVersion": "2018-05-01",
+                                                "name": "[[concat('mgmt', uniqueString('foo'))]",
+                                                "resourceGroup": "[[parameters('rgName')]",
+                                                "dependsOn": [
+                                                    "[[resourceId('Microsoft.Resources/resourceGroups/', parameters('rgName'))]"
+                                                ],
+                                                "properties": {
+                                                    "mode": "Incremental",
+                                                    "template": {
+                                                        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+                                                        "contentVersion": "1.0.0.0",
+                                                        "parameters": {},
+                                                        "variables": {},
+                                                        "resources": [
+                                                            {
+                                                                "apiVersion": "2017-03-15-preview",
+                                                                "location": "[[parameters('workspaceRegion')]",
+                                                                "name": "[[parameters('workspaceName')]",
+                                                                "type": "Microsoft.OperationalInsights/workspaces",
+                                                                "properties": {
+                                                                    "sku": {
+                                                                        "name": "pernode"
+                                                                    }
+                                                                }
+                                                            }
+                                                        ],
+                                                        "outputs": {}
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "outputs": {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyAssignmentName')]",
+            "location": "[deployment().location]",
+            "dependsOn": [
+                "[variables('policyDefinitionName')]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "description": "[variables('policyAssignmentName')]",
+                "displayName": "[variables('policyAssignmentName')]",
+                "scope": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'))]",
+                "policyDefinitionId": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'), '/providers/Microsoft.Authorization/policyDefinitions/', variables('policyDefinitionName'))]",
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[parameters('workspaceName')]"
+                    },
+                    "workspaceRegion": {
+                        "value": "[parameters('workspaceRegion')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2019-04-01-preview",
+            "name": "[parameters('rbacGuid')]",
+            "dependsOn": [
+                "[variables('policyAssignmentName')]"
+            ],
+            "properties": {
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', variables('rbacOwner'))]",
+                "principalId": "[toLower(reference(concat('/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName')), '2018-05-01', 'Full' ).identity.principalId)]"
+            }
+        },
+        {
+            "condition": "[equals(parameters('enforceLzGoalState'), 'Yes')]",
+            "type": "Microsoft.PolicyInsights/remediations",
+            "apiVersion": "2019-07-01",
+            "name": "loggingRemediation",
+            "dependsOn": [
+                "[parameters('rbacGuid')]"
+            ],
+            "properties": {
+                "policyAssignmentId": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'), '/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName'))]"
+            }
+        }
+    ]
+}
