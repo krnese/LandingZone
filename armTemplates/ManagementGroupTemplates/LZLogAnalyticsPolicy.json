@@ -122,10 +122,6 @@
                                             },
                                             "workspaceRegion": {
                                                 "type": "string"
-                                            },
-                                            "rbacGuid": {
-                                                "type": "string",
-                                                "defaultValue": "[[newGuid()]"
                                             }
                                         },
                                         "variables": {
