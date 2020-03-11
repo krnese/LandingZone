@@ -17,31 +17,14 @@
                 "parameters": {},
                 "policyRule": {
                     "if": {
-                        "anyOf": [
-                            {
-                                "field": "type",
-                                "equals": "Microsoft.Automation/automationAccounts/runbooks"
-                            },
-                            {
-                                "field": "type",
-                                "equals": "Microsoft.Automation/automationAccounts/variables"
-                            },
-                            {
-                                "field": "type",
-                                "equals": "Microsoft.Automation/automationAccounts/modules"
-                            },
-                            {
-                                "field": "type",
-                                "equals": "Microsoft.Automation/automationAccounts/credentials"
-                            },
-                            {
-                                "field": "type",
-                                "equals": "Microsoft.Automation/automationAccounts/connections"
-                            },
-                            {
-                                "field": "type",
-                                "equals": "Microsoft.Automation/automationAccounts/certificates"
-                            }
+                        "field": "type",
+                        "in": [
+                            "Microsoft.Automation/automationAccounts/runbooks",
+                            "Microsoft.Automation/automationAccounts/variables",
+                            "Microsoft.Automation/automationAccounts/modules",
+                            "Microsoft.Automation/automationAccounts/credentials",
+                            "Microsoft.Automation/automationAccounts/connections",
+                            "Microsoft.Automation/automationAccount/certificates"
                         ]
                     },
                     "then": {
