@@ -159,7 +159,7 @@
                 "policyDefinitionId": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'), '/providers/Microsoft.Authorization/policyDefinitions/', variables('policyDefinitionName'))]",
                 "parameters": {
                     "logAnalytics": {
-                        "value": "[parameters('logAnalyticsResourceId')]"
+                        "value": "[toLower(parameters('logAnalyticsResourceId'))]"
                     }
                 }
             }

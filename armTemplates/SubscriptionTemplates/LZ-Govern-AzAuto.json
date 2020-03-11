@@ -1,0 +1,58 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+    },
+    "variables": {
+        "policyDefinitionName": "LZ-Govern-Automation-Account",
+        "policyAssignmentName": "LZ-Govern-AzAuto"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2019-09-01",
+            "name": "[variables('policyDefinitionName')]",
+            "properties": {
+                "displayName": "Govern Automation account",
+                "description": "Policy to lock down automation account child resources",
+                "parameters": {},
+                "policyRule": {
+                    "if": {
+                        "allOf": [
+                            {
+                                "field": "type",
+                                "in": [
+                                    "Microsoft.Automation/automationAccounts/runbooks",
+                                    "Microsoft.Automation/automationAccounts/variables",
+                                    "Microsoft.Automation/automationAccounts/modules",
+                                    "Microsoft.Automation/automationAccounts/credentials",
+                                    "Microsoft.Automation/automationAccounts/connections",
+                                    "Microsoft.Automation/automationAccount/certificates"
+                                ]
+                            }
+                        ]
+                    },
+                    "then": {
+                        "effect": "deny"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyAssignmentName')]",
+            "location": "[deployment().location]",
+            "dependsOn": [
+                "[variables('policyDefinitionName')]"
+            ],
+            "properties": {
+                "description": "[variables('policyAssignmentName')]",
+                "displayName": "[variables('policyAssignmentName')]",
+                "scope": "[subscription().id]",
+                "policyDefinitionId": "[concat(subscription().id, '/providers/Microsoft.Authorization/policyDefinitions/', variables('policyDefinitionName'))]"
+            }
+        }
+    ],
+    "outputs": {}
+}
