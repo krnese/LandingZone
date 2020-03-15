@@ -1,0 +1,245 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "rgName": {
+            "type": "string",
+            "metadata": {
+                "description": "Provide the Resource Group name"
+            },
+            "defaultValue": "LZ-logs"
+        },
+        "workspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "Provide suffix for Log Analytics workspace that will be created per subscription"
+            },
+            "defaultValue": "[concat(deployment().name, '-plat-logs')]"
+        },
+        "rgLocation": {
+            "type": "array",
+            "metadata": {
+                "description": "Select Azure region for Log Analytics"
+            },
+            "defaultValue": [
+                "westeurope",
+                "eastus",
+                "westus"
+            ]
+        },
+        "rbacGuid": {
+            "type": "string",
+            "defaultValue": "[concat(guid('wsregion', deployment().location))]",
+            "metadata": {
+                "description": "Generates a GUID during deployment runtime to assign RBAC"
+            }
+        },
+        "enforceLzGoalState": {
+            "type": "string",
+            "allowedValues": [
+                "Yes",
+                "No"
+            ],
+            "defaultValue": "No"
+        }
+    },
+    "variables": {
+        "policyDefinitionName": "LZ-Enforce-Platform-Ws-Definition",
+        "policyAssignmentName": "LZ-Enforce-Platform-Ws",
+        "rbacOwner": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyDefinitionName')]",
+            "properties": {
+                "displayName": "[variables('policyDefinitionName')]",
+                "mode": "All",
+                "policyType": "Custom",
+                "parameters": {
+                    "workspaceName": {
+                        "type": "string",
+                        "metadata": {
+                            "description": "Provide suffix for Log Analytics workspace that will be created per subscription"
+                        }
+                    },
+                    "rgLocation": {
+                        "type": "array",
+                        "metadata": {
+                            "description": "Select Azure region for Log Analytics",
+                            "strongType": "location"
+                        }
+                    },
+                    "rgName": {
+                        "type": "string"
+                    }
+                },
+                "policyRule": {
+                    "if": {
+                        "allOf": [
+                            {
+                                "field": "type",
+                                "equals": "Microsoft.Resources/subscriptions"
+                            }
+                        ]
+                    },
+                    "then": {
+                        "effect": "deployIfNotExists",
+                        "details": {
+                            "type": "Microsoft.OperationalInsights/workspaces",
+                            "deploymentScope": "Subscription",
+                            "existenceScope": "Subscription",
+                            "roleDefinitionIds": [
+                                "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+                            ],
+                            "existenceCondition": {
+                                "allOf": [
+                                    {
+                                        "field": "name",
+                                        "like": "[[concat(parameters('workspaceName'), '-', '*')]"
+                                    },
+                                    {
+                                        "field": "location",
+                                        "in": "[[parameters('rgLocation')]"
+                                    }
+                                ]
+                            },
+                            "deployment": {
+                                "location": "[deployment().location]",
+                                "properties": {
+                                    "mode": "incremental",
+                                    "parameters": {
+                                        "rgName": {
+                                            "value": "[[parameters('rgName')]"
+                                        },
+                                        "workspaceName": {
+                                            "value": "[[parameters('workspaceName')]"
+                                        },
+                                        "rgLocation": {
+                                            "value": "[[parameters('rgLocation')]"
+                                        }
+                                    },
+                                    "template": {
+                                        "$schema": "http://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                                        "contentVersion": "1.0.0.0",
+                                        "parameters": {
+                                            "workspaceName": {
+                                                "type": "string"
+                                            },
+                                            "rgName": {
+                                                "type": "string"
+                                            },
+                                            "rgLocation": {
+                                                "type": "array"
+                                            }
+                                        },
+                                        "variables": {
+                                            "omsTemplateLink": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ResourceGroupTemplates/LZ-Platform-Workspace.json"
+                                        },
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.Resources/resourceGroups",
+                                                "apiVersion": "2018-05-01",
+                                                "location": "[[parameters('rgLocation')[copyIndex()]]",
+                                                "name": "[[concat(parameters('rgName'), '-', parameters('rgLocation')[copyIndex()])]",
+                                                "copy": {
+                                                    "name": "rgCopy",
+                                                    "count": "[[length(parameters('rgLocation'))]"
+                                                },
+                                                "properties": {}
+                                            },
+                                            {
+                                                "type": "Microsoft.Resources/deployments",
+                                                "apiVersion": "2018-05-01",
+                                                "name": "[[concat(deployment().name, '-logs-', parameters('rgLocation')[copyIndex()])]",
+                                                "resourceGroup": "[[concat(parameters('rgName'), '-', parameters('rgLocation')[copyIndex()])]",
+                                                "dependsOn": [
+                                                    "rgCopy"
+                                                ],
+                                                "copy": {
+                                                    "name": "deploymentCopy",
+                                                    "count": "[[length(parameters('rgLocation'))]"
+                                                },
+                                                "properties": {
+                                                    "mode": "Incremental",
+                                                    "templateLink": {
+                                                        "contentVersion": "1.0.0.0",
+                                                        "uri": "[[variables('omsTemplateLink')]"
+                                                    },
+                                                    "parameters": {
+                                                        "workspaceName": {
+                                                            "value": "[[concat(parameters('workspaceName'), '-', parameters('rgLocation')[copyIndex()])]"
+                                                        },
+                                                        "workspaceRegion": {
+                                                            "value": "[[parameters('rgLocation')[copyIndex()]]"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "outputs": {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyAssignmentName')]",
+            "location": "[deployment().location]",
+            "dependsOn": [
+                "[variables('policyDefinitionName')]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "description": "[variables('policyAssignmentName')]",
+                "displayName": "[variables('policyAssignmentName')]",
+                "scope": "[subscription().id]",
+                "policyDefinitionId": "[concat(subscription().id, '/providers/Microsoft.Authorization/policyDefinitions/', variables('policyDefinitionName'))]",
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[parameters('workspaceName')]"
+                    },
+                    "rgName": {
+                        "value": "[parameters('rgName')]"
+                    },
+                    "rgLocation": {
+                        "value": "[parameters('rgLocation')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2019-04-01-preview",
+            "name": "[parameters('rbacGuid')]",
+            "dependsOn": [
+                "[variables('policyAssignmentName')]"
+            ],
+            "properties": {
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[concat('/providers/Microsoft.Authorization/roleDefinitions/', variables('rbacOwner'))]",
+                "principalId": "[toLower(reference(concat('/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName')), '2018-05-01', 'Full' ).identity.principalId)]"
+            }
+        },
+        {
+            "condition": "[equals(parameters('enforceLzGoalState'), 'Yes')]",
+            "type": "Microsoft.PolicyInsights/remediations",
+            "apiVersion": "2019-07-01",
+            "name": "loggingRemediation",
+            "dependsOn": [
+                "[parameters('rbacGuid')]"
+            ],
+            "properties": {
+                "policyAssignmentId": "[concat(subscription().id, '/providers/Microsoft.Authorization/policyAssignments/', variables('policyAssignmentName'))]"
+            }
+        }
+    ]
+}
