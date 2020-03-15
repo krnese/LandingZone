@@ -1,0 +1,35 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mgmtGroupId": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "resourceTypesAllowed": {
+            "type": "array",
+            "defaultValue": [
+                "Microsoft.Resources/subscriptions"
+            ]
+        }
+    },
+    "variables": {
+        "policyAssignmentName": "LZ-Allowed-Resources"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2019-09-01",
+            "name": "[variables('policyAssignmentName')]",
+            "properties": {
+                "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/a08ec900-254a-4555-9bf5-e42af04b5c5c",
+                "scope": "[if(not(empty(parameters('mgmtGroupId'))), concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId')), subscription().id)]",
+                "parameters": {
+                    "listOfResourceTypesAllowed": {
+                        "value": "[parameters('resourceTypesAllowed')]"
+                    }
+                }
+            }
+        }
+    ]
+}
