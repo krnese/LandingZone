@@ -101,6 +101,7 @@
         "billingScope": "/providers/Microsoft.Billing/billingAccounts/d6fd151e-2f30-50d5-34b2-fe40b1d64b7f:31670802-3752-4741-b5cc-683c71eca69b_2019-05-31/billingProfiles/JIMI-YGZA-BG7-TGB/invoiceSections/NNUD-SDJC-PJA-TGB"
     },
     "resources": [
+        // Create top level management group under root for the Landing Zone architecture
         {
             "type": "Microsoft.Management/managementGroups",
             "apiVersion": "2020-02-01",
@@ -114,6 +115,7 @@
                 }
             }
         },
+        // Create management group for sandbox, allowing dev/test with no access to production
         {
             "type": "Microsoft.Management/managementGroups",
             "apiVersion": "2020-02-01",
@@ -130,6 +132,7 @@
                 }
             }
         },
+        // Create management group for decomissioned subscriptions
         {
             "type": "Microsoft.Management/managementGroups",
             "apiVersion": "2020-02-01",
@@ -248,7 +251,7 @@
             }
         },
         {
-            // Deploying non-negotionable Azure Security Policy applicable for everything within parent root management group id.
+            // Deploying non-negotionable Azure Security Policy applicable for everything within the landing zone architecture.
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(deployment().name, 'ascPolicy')]",
             "apiVersion": "2019-07-01",
@@ -271,7 +274,7 @@
             }
         },
         {
-            // Deploying non-negotionable Azure Security Policy applicable for everything within Company management group id.
+            // Deploying non-negotionable Azure Security Policy applicable for all subscriptions.
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(deployment().name, 'ascPolicySub')]",
             "apiVersion": "2019-07-01",
@@ -420,6 +423,7 @@
                 }
             }
         },
+        // Enable Azure Sentinel on the primary Log Analytics workspace in mgmt subscription
         {
             "condition": "[not(empty(parameters('mgmtSubId')))]",
             "type": "Microsoft.Resources/deployments",
