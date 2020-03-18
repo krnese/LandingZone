@@ -1,0 +1,440 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/tenantDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "rootGroupParentId": {
+            "type": "string",
+            "defaultValue": "armtest",
+            "metadata": {
+                "description": "This is the root management group, and all management groups will be child to this one."
+            }
+        },
+        "lzCompanyName": {
+            "type": "string",
+            "metadata": {
+                "description": "MG prefix for required management group structure for Landing Zone."
+            },
+            "defaultValue": "Fabrikam"
+        },
+        "lzRegion": {
+            "type": "string",
+            "defaultValue": "[deployment().location]",
+            "metadata": {
+                "description": "Provide the initial region for the LZ setup. This will create all core resources in this region. Default is set to ARM deployment location."
+            }
+        },
+        "lzAllowedRegions": {
+            "type": "array",
+            "defaultValue": [
+                "[deployment().location]",
+                "uksouth",
+                "southcentralus"
+            ],
+            "metadata": {
+                "description": "Provide the list of allowed regions for the Landing Zones that will be governed by Azure Policy, and requisite infrastrucure will be deployed to handle security & management."
+            }
+        },
+        "lzBusinessUnitMg": {
+            "type": "string",
+            "defaultValue": "RiskMgmt",
+            "metadata": {
+                "description": "Child management groups for app portfolios in landing zone"
+            }
+        },
+        "lzTags": {
+            "type": "object",
+            "defaultValue": {
+                "Deployment": "AzureLandingZone",
+                "Version": "1.0.0.0"
+            }
+        },
+        "enforceLzGoalState": {
+            "type": "string",
+            "allowedValues": [
+                "Yes",
+                "No"
+            ],
+            "defaultValue": "Yes",
+            "metadata": {
+                "description": "If 'Yes', policies will bring existing subscription and resources to goal state per policy assignments, if 'No', there will be no automated actions."
+            }
+        },
+        "mgmtSubId": {
+            "type": "string",
+            "defaultValue": "4d6a661f-2192-5ef8-a377-ae79beb54f3c"
+        },
+        "connectivitySubId": {
+            "type": "string",
+            "defaultValue": "e6414901-c1bf-556f-a36f-a2ca8f14b345"
+        }
+    },
+    "variables": {
+        "lzAllRegions": "[parameters('lzAllowedRegions')]",
+        "lzDefaultManagementGroups": {
+            "sandbox": "Sandbox",
+            "decomission": "Decomission"
+        },
+        "lzDefaultSubscriptions": {
+            "lzManagement": "management",
+            "lzConnectivity": "connectivity"
+        },
+        "lzPlatformLoggingResourceGroupName": "[concat(parameters('lzCompanyName'), '-logs')]",
+        "lzPlatformLoggingWsName": "[concat(variables('lzPlatformLoggingResourceGroupName'), '-ws')]",
+        "primaryPlatformWorkspace": "[concat('/subscriptions/', parameters('mgmtSubId'), '/resourceGroups/', concat(variables('lzPlatformLoggingResourceGroupName'), '-', parameters('lzRegion'), '/providers/Microsoft.OperationalInsights/workspaces/', concat(variables('lzPlatformLoggingWsName'), '-', deployment().location)))]",
+        "lzPlatformAutomationAccountName": "[concat(variables('lzPlatformLoggingResourceGroupName'), '-auto')]",
+        "lzConnectivityResourceGroupName": "[concat(parameters('lzCompanyName'), '-nw')]",
+        "linkedTemplates": {
+            "ascPolicyUri": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-Enable-ASC-Monitoring.json",
+            "ascSubPolicyUri": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-Enforce-ASC-Subscription.json",
+            "monitoringPolicyUri": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-LogAnalyticsPolicy.json#",
+            "locationPolicyUri": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-AllowedLocationsPolicy.json",
+            "netOpsRbacUri": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-NetOpsRBAC.json",
+            "appOpsRbacUri": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-AppOpsRBAC.json",
+            "subOwnerRbacUri": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-SubOwnerRBAC.json",
+            "azMgmtUri": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-AzureManagement.json",
+            "subscriptionLogs": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-EnforceSubLogs.json",
+            "azAutomation": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-Govern-AzAuto.json",
+            "platformWorkspaces": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-MultiRegionWorkspacePolicy.json",
+            "lzDecomissionPolicy": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-DecomissionPolicies.json"
+        },
+        "billingScope": "/providers/Microsoft.Billing/billingAccounts/d6fd151e-2f30-50d5-34b2-fe40b1d64b7f:31670802-3752-4741-b5cc-683c71eca69b_2019-05-31/billingProfiles/JIMI-YGZA-BG7-TGB/invoiceSections/NNUD-SDJC-PJA-TGB"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Management/managementGroups",
+            "apiVersion": "2020-02-01",
+            "name": "[parameters('lzCompanyName')]",
+            "properties": {
+                "displayName": "[parameters('lzCompanyName')]",
+                "details": {
+                    "parent": {
+                        "id": "[tenantResourceId('Microsoft.Management/managementGroups/', parameters('rootGroupParentId'))]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Management/managementGroups",
+            "apiVersion": "2020-02-01",
+            "name": "[variables('lzDefaultManagementGroups').sandbox]",
+            "dependsOn": [
+                "[parameters('lzCompanyName')]"
+            ],
+            "properties": {
+                "displayName": "[variables('lzDefaultManagementGroups').sandbox]",
+                "details": {
+                    "parent": {
+                        "id": "[tenantResourceId('Microsoft.Management/managementGroups/', parameters('lzCompanyName'))]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Management/managementGroups",
+            "apiVersion": "2020-02-01",
+            "name": "[variables('lzDefaultManagementGroups').decomission]",
+            "dependsOn": [
+                "[parameters('lzCompanyName')]"
+            ],
+            "properties": {
+                "displayName": "[variables('lzDefaultManagementGroups').decomission]",
+                "details": {
+                    "parent": {
+                        "id": "[tenantResourceId('Microsoft.Management/managementGroups/', parameters('lzCompanyName'))]"
+                    }
+                }
+            }
+        },
+        // Assign policy to decomission mg to prevent any resource creations
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "[concat(deployment().name, 'decomissionPolicy')]",
+            "scope": "[concat('Microsoft.Management/managementGroups/', variables('lzDefaultManagementGroups').decomission)]",
+            "location": "[parameters('lzRegion')]",
+            "dependsOn": [
+                "[variables('lzDefaultManagementGroups').decomission]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('linkedTemplates').lzDecomissionPolicy]"
+                },
+                "parameters": {
+                    "mgmtGroupId": {
+                        "value": "[variables('lzDefaultManagementGroups').decomission]"
+                    }
+                }
+            }
+        },
+        {
+            // creating a new subscription for LZ management using a deterministic guid function
+            "type": "Microsoft.Subscription/subscriptions",
+            "name": "[parameters('mgmtSubId')]",
+            "apiVersion": "2019-10-01-preview",
+            "dependsOn": [
+                "[parameters('lzCompanyName')]"
+            ],
+            "properties": {
+                "displayName": "[variables('lzDefaultSubscriptions').lzManagement]",
+                "billingScope": "[variables('billingScope')]",
+                "managementGroupId": "[tenantResourceId('Microsoft.Management/managementGroups/', parameters('lzCompanyName'))]",
+                "skuId": "0001"
+            }
+        },
+        {
+            // creating a new subscription for LZ connectivity using a deterministic guid function
+            "type": "Microsoft.Subscription/subscriptions",
+            "name": "[parameters('connectivitySubId')]",
+            "apiVersion": "2019-10-01-preview",
+            "dependsOn": [
+                "[parameters('lzCompanyName')]"
+            ],
+            "properties": {
+                "displayName": "[variables('lzDefaultSubscriptions').lzConnectivity]",
+                "billingScope": "[variables('billingScope')]",
+                "managementGroupId": "[tenantResourceId('Microsoft.Management/managementGroups/', parameters('lzCompanyName'))]",
+                "skuId": "0001"
+            }
+        },
+        {
+            // Deploying policy to management subscription to lock down Azure Automation account for usage beyond Update Management
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "location": "[deployment().location]",
+            "name": "[concat(deployment().name, 'azAuto')]",
+            "subscriptionId": "[parameters('mgmtSubId')]",
+            "dependsOn": [
+                "[parameters('mgmtSubId')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('linkedTemplates').azAutomation]"
+                }
+            }
+        },
+        {
+            // Deploying Policy to enforce Acitivty Logs to platform workspace
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(deployment().name, 'subAudit')]",
+            "apiVersion": "2019-07-01",
+            "scope": "[concat('Microsoft.Management/managementGroups/', parameters('lzCompanyName'))]",
+            "location": "[parameters('lzRegion')]",
+            "dependsOn": [
+                "[parameters('lzCompanyName')]",
+                "[concat(deployment().name, '-mgmt')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('linkedTemplates').subscriptionLogs]"
+                },
+                "parameters": {
+                    "mgmtGroupId": {
+                        "value": "[parameters('lzCompanyName')]"
+                    },
+                    "logAnalyticsResourceId": {
+                        "value": "[variables('primaryPlatformWorkspace')]"
+                    },
+                    "enforceLzGoalState": {
+                        "value": "[parameters('enforceLzGoalState')]"
+                    }
+                }
+            }
+        },
+        {
+            // Deploying non-negotionable Azure Security Policy applicable for everything within parent root management group id.
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(deployment().name, 'ascPolicy')]",
+            "apiVersion": "2019-07-01",
+            "scope": "[concat('Microsoft.Management/managementGroups/', parameters('lzCompanyName'))]",
+            "location": "[parameters('lzRegion')]",
+            "dependsOn": [
+                "[parameters('lzCompanyName')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('linkedTemplates').ascPolicyUri]"
+                },
+                "parameters": {
+                    "mgmtGroupId": {
+                        "value": "[parameters('lzCompanyName')]"
+                    }
+                }
+            }
+        },
+        {
+            // Deploying non-negotionable Azure Security Policy applicable for everything within Company management group id.
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(deployment().name, 'ascPolicySub')]",
+            "apiVersion": "2019-07-01",
+            "scope": "[concat('Microsoft.Management/managementGroups/', parameters('lzCompanyName'))]",
+            "location": "[parameters('lzRegion')]",
+            "dependsOn": [
+                "[parameters('lzCompanyName')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('linkedTemplates').ascSubPolicyUri]"
+                },
+                "parameters": {
+                    "mgmtGroupId": {
+                        "value": "[parameters('lzCompanyName')]"
+                    },
+                    "enforceLzGoalState": {
+                        "value": "[parameters('enforceLzGoalState')]"
+                    }
+                }
+            }
+        },        
+        {
+            // Deploying monitoring and logging policies for Application Landing Zones
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(deployment().name, 'monitoring')]",
+            "apiVersion": "2019-05-01",
+            "scope": "[concat('Microsoft.Management/managementGroups/', parameters('lzBusinessUnitMg'))]",
+            "dependsOn": [
+                "[parameters('lzBusinessUnitMg')]"
+            ],
+            "location": "[parameters('lzRegion')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('linkedTemplates').monitoringPolicyUri]"
+                },
+                "parameters": {
+                    "mgmtGroupId": {
+                        "value": "[parameters('lzBusinessUnitMg')]"
+                    },
+                    "workspaceName": {
+                        "value": "LZ-WS"
+                    },
+                    "workspaceRegion": {
+                        "value": "[parameters('lzRegion')]"
+                    },
+                    "enforceLzGoalState": {
+                        "value": "[parameters('enforceLzGoalState')]"
+                    }
+                }
+            }
+        },
+        {
+            // Deploying policies to ringfence the regions allowed within the Landing Zone
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat(deployment().name, 'locations')]",
+            "apiVersion": "2019-05-01",
+            "scope": "[concat('Microsoft.Management/managementGroups/', parameters('lzBusinessUnitMg'))]",
+            "dependsOn": [
+                "[parameters('lzBusinessUnitMg')]"
+            ],
+            "location": "[parameters('lzRegion')]",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('linkedTemplates').locationPolicyUri]"
+                },
+                "parameters": {
+                    "mgmtGroupId": {
+                        "value": "[parameters('lzBusinessUnitMg')]"
+                    },
+                    "allowedLocations": {
+                        "value": "[variables('lzAllRegions')]"
+                    }
+                }
+            }
+        },
+        {
+            // If management subscription id is provided, core management infrastructure and services will be deployed to all regions for LZ
+            "condition": "[not(empty(parameters('mgmtSubId')))]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "subscriptionId": "[parameters('mgmtSubId')]",
+            "location": "[parameters('lzRegion')]",
+            "name": "[concat(deployment().name, '-mgmt')]",
+            "dependsOn": [
+                "[tenantResourceId('Microsoft.Subscription/subscriptions/', parameters('mgmtSubId'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedTemplates').azMgmtUri]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[variables('lzPlatformLoggingWsName')]"
+                    },
+                    "automationAccountName": {
+                        "value": "[variables('lzPlatformAutomationAccountName')]"
+                    },
+                    "rgName": {
+                        "value": "[variables('lzPlatformLoggingResourceGroupName')]"
+                    },
+                    "rgLocation": {
+                        "value": "[variables('lzAllRegions')]"
+                    },
+                    "lzTags": {
+                        "value": "[parameters('lzTags')]"
+                    }
+                }
+            }
+        },
+        {
+            // If management subscription id is provided, core management infrastructure and services will be deployed to all regions for LZ
+            "condition": "[not(empty(parameters('mgmtSubId')))]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "subscriptionId": "[parameters('mgmtSubId')]",
+            "location": "[parameters('lzRegion')]",
+            "name": "[concat(deployment().name, '-platformlogs')]",
+            "dependsOn": [
+                "[tenantResourceId('Microsoft.Subscription/subscriptions/', parameters('mgmtSubId'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedTemplates').platformWorkspaces]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[variables('lzPlatformLoggingWsName')]"
+                    },
+                    "rgName": {
+                        "value": "[variables('lzPlatformLoggingResourceGroupName')]"
+                    },
+                    "rgLocation": {
+                        "value": "[variables('lzAllRegions')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Management/managementGroups",
+            "apiVersion": "2020-02-01",
+            "name": "[parameters('lzBusinessUnitMg')]",
+            "dependsOn": [
+                "[parameters('lzCompanyName')]"
+            ],
+            "properties": {
+                "displayName": "[parameters('lzBusinessUnitMg')]",
+                "details": {
+                    "parent": {
+                        "id": "[tenantResourceId('Microsoft.Management/managementGroups/', parameters('lzCompanyName'))]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
