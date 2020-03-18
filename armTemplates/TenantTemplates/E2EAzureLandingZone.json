@@ -95,7 +95,8 @@
             "subscriptionLogs": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-EnforceSubLogs.json",
             "azAutomation": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-Govern-AzAuto.json",
             "platformWorkspaces": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-MultiRegionWorkspacePolicy.json",
-            "lzDecomissionPolicy": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-DecomissionPolicies.json"
+            "lzDecomissionPolicy": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-DecomissionPolicies.json",
+            "sentinelWorkspace": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-SentinelWorkspace.json"
         },
         "billingScope": "/providers/Microsoft.Billing/billingAccounts/d6fd151e-2f30-50d5-34b2-fe40b1d64b7f:31670802-3752-4741-b5cc-683c71eca69b_2019-05-31/billingProfiles/JIMI-YGZA-BG7-TGB/invoiceSections/NNUD-SDJC-PJA-TGB"
     },
@@ -415,6 +416,35 @@
                     },
                     "rgLocation": {
                         "value": "[variables('lzAllRegions')]"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[not(empty(parameters('mgmtSubId')))]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "[concat(deployment().name, '-sentinel')]",
+            "subscriptionId": "[parameters('mgmtSubId')]",
+            "location": "[parameters('lzRegion')]",
+            "dependsOn": [
+                "[concat(deployment().name, '-platformlogs')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedTemplates').sentinelWorkspace]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[concat(variables('lzPlatformLoggingWsName'), '-', parameters('lzRegion'))]"
+                    },
+                    "workspaceRegion": {
+                        "value": "[parameters('lzRegion')]"
+                    },
+                    "resourceGroupName": {
+                        "value": "[concat(variables('lzPlatformLoggingResourceGroupName'), '-', parameters('lzRegion'))]"
                     }
                 }
             }
