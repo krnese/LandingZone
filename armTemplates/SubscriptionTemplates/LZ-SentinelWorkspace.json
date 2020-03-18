@@ -32,22 +32,6 @@
                     "parameters": {},
                     "resources": [
                         {
-                            "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectors",
-                            "apiVersion": "2019-01-01-preview",
-                            "name": "[concat(parameters('workspaceName'), '/', 'Microsoft.SecurityInsights/', subscription().subscriptionId)]",
-                            "location": "[parameters('workspaceRegion')]",
-                            "kind": "AzureSecurityCenter",
-                            "dependsOn": [],
-                            "properties": {
-                                "subscriptionId": "[subscription().subscriptionId]",
-                                "dataTypes": {
-                                    "alerts": {
-                                        "state": "enabled"
-                                    }
-                                }
-                            }
-                        },
-                        {
                             "apiVersion": "2015-11-01-preview",
                             "type": "Microsoft.OperationsManagement/solutions",
                             "name": "[variables('solutions').name]",
