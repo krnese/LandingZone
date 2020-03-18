@@ -24,7 +24,6 @@
             "apiVersion": "2018-05-01",
             "resourceGroup": "[parameters('resourceGroupName')]",
             "name": "[concat(deployment().name, 'rg-sentinel')]",
-            "location": "[parameters('workspaceRegion')]",
             "properties": {
                 "mode": "Incremental",
                 "template": {
