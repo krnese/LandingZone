@@ -1,0 +1,97 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspaceId": {
+            "type": "string",
+            "defaultValue": "/subscriptions/4d6a661f-2192-5ef8-a377-ae79beb54f3c/resourcegroups/fabrikam-logs-westeurope/providers/microsoft.operationalinsights/workspaces/fabrikam-logs-ws-westeurope"
+        },
+        "workspaceName": {
+            "type": "string",
+            "defaultValue": "fabrikam-logs-ws-westeurope"
+        },
+        "workspaceRegion": {
+            "type": "string",
+            "defaultValue": "westeurope"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Security/automations",
+            "apiVersion": "2019-01-01-preview",
+            "name": "exportToWorkspace2",
+            "location": "[parameters('workspaceRegion')]",
+            "dependsOn": [],
+            "properties": {
+                "description": "Continous export to ws",
+                "isEnabled": false,
+                "scopes": [
+                    {
+                        "description": "e6414901-c1bf-556f-a36f-a2ca8f14b345",
+                        "scopePath": "/subscriptions/4d6a661f-2192-5ef8-a377-ae79beb54f3c"
+                    }
+                ],
+                "sources": [
+                    {
+                        "eventSource": "Assessments",
+                        "ruleSets": [
+                            {
+                                "rules": [
+                                    {
+                                        "propertyJPath": "type",
+                                        "propertyType": "String",
+                                        "expectedValue": "Microsoft.Security/assessments",
+                                        "operator": "Contains"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "eventSource": "Alerts",
+                        "ruleSets": [
+                            {
+                                "rules": [
+                                    {
+                                        "propertyJPath": "Severity",
+                                        "propertyType": "String",
+                                        "expectedValue": "low",
+                                        "operator": "Equals"
+                                    }
+                                ]
+                            },
+                            {
+                                "rules": [
+                                    {
+                                        "propertyJPath": "Severity",
+                                        "propertyType": "String",
+                                        "expectedValue": "medium",
+                                        "operator": "Equals"
+                                    }
+                                ]
+                            },
+                            {
+                                "rules": [
+                                    {
+                                        "propertyJPath": "Severity",
+                                        "propertyType": "String",
+                                        "expectedValue": "high",
+                                        "operator": "Equals"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "actions": [
+                    {
+                        "workspaceResourceId": "[parameters('workspaceId')]",
+                        "actionType": "Workspace"
+                    }
+                ]
+            }
+        }
+    ]
+}
