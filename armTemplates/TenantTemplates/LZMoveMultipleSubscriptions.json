@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/tenantDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "targetMgId": {
+            "type": "string",
+            "metadata": {
+                "description": "Provide the management group id (ie., 'contoso')"
+            }
+        },
+        "subscriptionId": {
+            "type": "array",
+            "defaultValue": [
+                "e6414901-c1bf-556f-a36f-a2ca8f14b345",
+                "4d6a661f-2192-5ef8-a377-ae79beb54f3c"
+            ]
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Management/managementGroups/subscriptions",
+            "apiVersion": "2020-02-01",
+            "name": "[concat(parameters('targetMgId'), '/', parameters('subscriptionId')[copyIndex()])]",
+            "copy": {
+                "name": "submove",
+                "count": "[length(parameters('subscriptionId'))]"
+            },
+            "properties": {
+            }
+        }
+    ],
+    "outputs": {}
+}
