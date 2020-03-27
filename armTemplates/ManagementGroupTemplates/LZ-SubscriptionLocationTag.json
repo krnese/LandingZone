@@ -1,0 +1,91 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mgmtGroupId": {
+            "type": "string"
+        },
+        "tagName": {
+            "type": "string"
+        },
+        "tagValue": {
+            "type": "array"
+        }
+    },
+    "variables": {
+        "policyDefinitionName": "LZ-Sub-Location-Definition",
+        "policyAssignmentName": "LZ-Sub-Location"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyDefinitionName')]",
+            "properties": {
+                "displayName": "Require a tag and its value on subscriptions",
+                "policyType": "Custom",
+                "mode": "All",
+                "description": "Enforces a required tag and its value on subscriptions.",
+                "metadata": {
+                    "version": "1.0.0",
+                    "category": "Tags"
+                },
+                "parameters": {
+                    "tagName": {
+                        "type": "String",
+                        "metadata": {
+                            "displayName": "Tag Name",
+                            "description": "Name of the tag, such as 'environment'"
+                        }
+                    },
+                    "tagValue": {
+                        "type": "Array",
+                        "metadata": {
+                            "displayName": "Tag Values",
+                            "description": "Values of the tag"
+                        }
+                    }
+                },
+                "policyRule": {
+                    "if": {
+                        "allOf": [
+                            {
+                                "field": "type",
+                                "equals": "Microsoft.Resources/subscriptions"
+                            },
+                            {
+                                "field": "[[concat('tags[', parameters('tagName'), ']')]",
+                                "notIn": "[[parameters('tagValue')]"
+                            }
+                        ]
+                    },
+                    "then": {
+                        "effect": "audit"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyAssignmentName')]",
+            "dependsOn": [
+                "[variables('policyDefinitionName')]"
+            ],
+            "properties": {
+                "description": "[variables('policyAssignmentName')]",
+                "displayName": "[variables('policyAssignmentName')]",
+                "scope": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'))]",
+                "policyDefinitionId": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'), '/providers/Microsoft.Authorization/policyDefinitions/', variables('policyDefinitionName'))]",
+                "parameters": {
+                    "tagName": {
+                        "value": "[parameters('tagName')]"
+                    },
+                    "tagValue": {
+                        "value": "[parameters('tagValue')]"
+                    }
+                }
+            }
+        }
+    ]
+}

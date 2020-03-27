@@ -1,0 +1,81 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/managementGroupDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mgmtGroupId": {
+            "type": "string"
+        },
+        "lzNamingConvention": {
+            "type": "string",
+            "defaultValue": "???-???-???-##"
+        }
+    },
+    "variables": {
+        "policyDefinitionName": "LZ-NamingConvention-Definition",
+        "policyAssignmentName": "LZ-NamingConvention"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Authorization/policyDefinitions",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyDefinitionName')]",
+            "properties": {
+                "displayName": "Require a tag and its value on subscriptions",
+                "policyType": "Custom",
+                "mode": "All",
+                "description": "Enforces a required tag and its value on subscriptions.",
+                "metadata": {
+                    "version": "1.0.0",
+                    "category": "Tags"
+                },
+                "parameters": {
+                    "lzNamingConvention": {
+                        "type": "String",
+                        "metadata": {
+                            "displayName": "Naming convention for subscriptions",
+                            "description": "Policy will audit naming convention for subscriptions"
+                        }
+                    }
+                },
+                "policyRule": {
+                    "if": {
+                        "allOf": [
+                            {
+                                "field": "type",
+                                "equals": "Microsoft.Resources/subscriptions"
+                            },
+                            {
+                                "not": {
+                                    "field": "name",
+                                    "match": "[[parameters('lzNamingConvention')]"
+                                }
+                            }
+                        ]
+                    },
+                    "then": {
+                        "effect": "audit"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/policyAssignments",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('policyAssignmentName')]",
+            "dependsOn": [
+                "[variables('policyDefinitionName')]"
+            ],
+            "properties": {
+                "description": "[variables('policyAssignmentName')]",
+                "displayName": "[variables('policyAssignmentName')]",
+                "scope": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'))]",
+                "policyDefinitionId": "[concat('/providers/Microsoft.Management/managementGroups/', parameters('mgmtGroupId'), '/providers/Microsoft.Authorization/policyDefinitions/', variables('policyDefinitionName'))]",
+                "parameters": {
+                    "lzNamingConvention": {
+                        "value": "[parameters('lzNamingConvention')]"
+                    }
+                }
+            }
+        }
+    ]
+}
