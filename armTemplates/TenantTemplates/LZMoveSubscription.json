@@ -4,20 +4,18 @@
     "parameters": {
         "targetMgId": {
             "type": "string",
-            "defaultValue": "BU1",
             "metadata": {
-                "description": "This is the root management group, and all management groups will be child to this one."
+                "description": "Provide the management group id (ie., 'contoso')"
             }
         },
         "subscriptionId": {
-            "type": "string",
-            "defaultValue": "e21ecca9-ad71-4633-80c3-d68637f0fa17"
+            "type": "string"
         }
     },
     "resources": [
         {
             "type": "Microsoft.Management/managementGroups/subscriptions",
-            "apiVersion": "2018-03-01-preview",
+            "apiVersion": "2020-02-01",
             "name": "[concat(parameters('targetMgId'), '/', parameters('subscriptionId'))]",
             "properties": {
             }
