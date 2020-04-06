@@ -1,0 +1,40 @@
+{
+    "properties": {
+        "displayName": "Audit naming convention on subscriptions",
+        "policyType": "Custom",
+        "mode": "All",
+        "description": "Audit the naming convention on subscriptions",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Convention"
+        },
+        "parameters": {
+            "subscriptionNamingConvention": {
+                "type": "String",
+                "metadata": {
+                    "displayName": "Naming convention for subscriptions",
+                    "description": "Policy will audit naming convention for subscriptions"
+                }
+            }
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    {
+                        "field": "type",
+                        "equals": "Microsoft.Resources/subscriptions"
+                    },
+                    {
+                        "not": {
+                            "field": "name",
+                            "match": "[parameters('subscriptionNamingConvention')]"
+                        }
+                    }
+                ]
+            },
+            "then": {
+                "effect": "audit"
+            }
+        }
+    }
+}
