@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/tenantDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "mgmtId": {
+            "type": "string",
+            "defaultValue": "6bfb826c-689c-43ae-80f0-f79069223548"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Management/managementGroups/settings",
+            "apiVersion": "2020-02-01",
+            "name": "[concat(parameters('mgmtId'), '/', 'default')]",
+            "properties": {
+                "defaultManagementGroup": "[tenantResourceId('Microsoft.Management/managementGroups/', parameters('mgmtId'))]",
+                "requireAuhtorizationForGroupCreation": false
+            }
+        }
+    ]
+}
