@@ -14,7 +14,7 @@
             "name": "[concat(parameters('mgmtId'), '/', 'default')]",
             "properties": {
                 "defaultManagementGroup": "[tenantResourceId('Microsoft.Management/managementGroups/', parameters('mgmtId'))]",
-                "requireAuhtorizationForGroupCreation": false
+                "requireAuhtorizationForGroupCreation": true
             }
         }
     ]
