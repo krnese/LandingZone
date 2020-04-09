@@ -254,21 +254,10 @@
             "properties": {
                 "sku": {
                     "name": "pernode"
-                }
+                },
+                "enableLogAccessUsingOnlyResourcePermissions": true
             },
             "resources": [
-                {
-                    "name": "AzureActivityLog",
-                    "type": "datasources",
-                    "apiVersion": "2015-11-01-preview",
-                    "dependsOn": [
-                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]"
-                    ],
-                    "kind": "AzureActivityLog",
-                    "properties": {
-                        "linkedResourceId": "[concat(subscription().id, '/providers/Microsoft.Insights/eventTypes/management')]"
-                    }
-                },
                 {
                     "name": "Automation",
                     "type": "linkedServices",

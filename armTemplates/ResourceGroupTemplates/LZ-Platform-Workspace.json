@@ -232,7 +232,8 @@
             "properties": {
                 "sku": {
                     "name": "pernode"
-                }
+                },
+                "enableLogAccessUsingOnlyResourcePermissions": true
             }
         },
         {

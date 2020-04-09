@@ -14,7 +14,7 @@
             "metadata": {
                 "description": "MG prefix for required management group structure for Landing Zone."
             },
-            "defaultValue": "Fabrikam"
+            "defaultValue": "Contoso"
         },
         "lzRegion": {
             "type": "string",
@@ -34,13 +34,6 @@
                 "description": "Provide the list of allowed regions for the Landing Zones that will be governed by Azure Policy, and requisite infrastrucure will be deployed to handle security & management."
             }
         },
-        "lzBusinessUnitMg": {
-            "type": "string",
-            "defaultValue": "RiskMgmt",
-            "metadata": {
-                "description": "Child management groups for app portfolios in landing zone"
-            }
-        },
         "lzTags": {
             "type": "object",
             "defaultValue": {
@@ -54,7 +47,7 @@
                 "Yes",
                 "No"
             ],
-            "defaultValue": "Yes",
+            "defaultValue": "No",
             "metadata": {
                 "description": "If 'Yes', policies will bring existing subscription and resources to goal state per policy assignments, if 'No', there will be no automated actions."
             }
@@ -69,10 +62,12 @@
         }
     },
     "variables": {
+        "lzNamingConvention": "???-???-???-##",
         "lzAllRegions": "[parameters('lzAllowedRegions')]",
         "lzDefaultManagementGroups": {
             "sandbox": "Sandbox",
-            "decomission": "Decomission"
+            "decomission": "Decomission",
+            "landingZones": "LandingZones"
         },
         "lzDefaultSubscriptions": {
             "lzManagement": "management",
@@ -96,7 +91,8 @@
             "azAutomation": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-Govern-AzAuto.json",
             "platformWorkspaces": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-MultiRegionWorkspacePolicy.json",
             "lzDecomissionPolicy": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-DecomissionPolicies.json",
-            "sentinelWorkspace": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-SentinelWorkspace.json"
+            "sentinelWorkspace": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/SubscriptionTemplates/LZ-SentinelWorkspace.json",
+            "lzNamingConventionPolicy": "https://raw.githubusercontent.com/krnese/LandingZone/master/armTemplates/ManagementGroupTemplates/LZ-NamingConvention.json"
         },
         "billingScope": "/providers/Microsoft.Billing/billingAccounts/d6fd151e-2f30-50d5-34b2-fe40b1d64b7f:31670802-3752-4741-b5cc-683c71eca69b_2019-05-31/billingProfiles/JIMI-YGZA-BG7-TGB/invoiceSections/NNUD-SDJC-PJA-TGB"
     },
@@ -168,6 +164,32 @@
                 "parameters": {
                     "mgmtGroupId": {
                         "value": "[variables('lzDefaultManagementGroups').decomission]"
+                    }
+                }
+            }
+        },
+        // Assigning naming convention policy for Landing Zone management group
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "name": "[concat(deployment().name, 'lzNamingConvention')]",
+            "scope": "[concat('Microsoft.Management/managementGroups/', variables('lzDefaultManagementGroups').landingZones)]",
+            "location": "[parameters('lzRegion')]",
+            "dependsOn": [
+                "[variables('lzDefaultManagementGroups').landingZones]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[variables('linkedTemplates').lzNamingConventionPolicy]"
+                },
+                "parameters": {
+                    "mgmtGroupId": {
+                        "value": "[variables('lzDefaultManagementGroups').landingZones]"
+                    },
+                    "lzNamingConvention": {
+                        "value": "[variables('lzNamingConvention')]"
                     }
                 }
             }
@@ -304,9 +326,9 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(deployment().name, 'monitoring')]",
             "apiVersion": "2019-05-01",
-            "scope": "[concat('Microsoft.Management/managementGroups/', parameters('lzBusinessUnitMg'))]",
+            "scope": "[concat('Microsoft.Management/managementGroups/', variables('lzDefaultManagementGroups').landingZones)]",
             "dependsOn": [
-                "[parameters('lzBusinessUnitMg')]"
+                "[variables('lzDefaultManagementGroups').landingZones]"
             ],
             "location": "[parameters('lzRegion')]",
             "properties": {
@@ -317,7 +339,7 @@
                 },
                 "parameters": {
                     "mgmtGroupId": {
-                        "value": "[parameters('lzBusinessUnitMg')]"
+                        "value": "[variables('lzDefaultManagementGroups').landingZones]"
                     },
                     "workspaceName": {
                         "value": "LZ-WS"
@@ -336,9 +358,9 @@
             "type": "Microsoft.Resources/deployments",
             "name": "[concat(deployment().name, 'locations')]",
             "apiVersion": "2019-05-01",
-            "scope": "[concat('Microsoft.Management/managementGroups/', parameters('lzBusinessUnitMg'))]",
+            "scope": "[concat('Microsoft.Management/managementGroups/', variables('lzDefaultManagementGroups').landingZones)]",
             "dependsOn": [
-                "[parameters('lzBusinessUnitMg')]"
+                "[variables('lzDefaultManagementGroups').landingZones]"
             ],
             "location": "[parameters('lzRegion')]",
             "properties": {
@@ -349,7 +371,7 @@
                 },
                 "parameters": {
                     "mgmtGroupId": {
-                        "value": "[parameters('lzBusinessUnitMg')]"
+                        "value": "[variables('lzDefaultManagementGroups').landingZones]"
                     },
                     "allowedLocations": {
                         "value": "[variables('lzAllRegions')]"
@@ -424,6 +446,7 @@
             }
         },
         // Enable Azure Sentinel on the primary Log Analytics workspace in mgmt subscription
+        /*
         {
             "condition": "[not(empty(parameters('mgmtSubId')))]",
             "type": "Microsoft.Resources/deployments",
@@ -453,15 +476,16 @@
                 }
             }
         },
+        */
         {
             "type": "Microsoft.Management/managementGroups",
             "apiVersion": "2020-02-01",
-            "name": "[parameters('lzBusinessUnitMg')]",
+            "name": "[variables('lzDefaultManagementGroups').landingZones]",
             "dependsOn": [
                 "[parameters('lzCompanyName')]"
             ],
             "properties": {
-                "displayName": "[parameters('lzBusinessUnitMg')]",
+                "displayName": "[variables('lzDefaultManagementGroups').landingZones]",
                 "details": {
                     "parent": {
                         "id": "[tenantResourceId('Microsoft.Management/managementGroups/', parameters('lzCompanyName'))]"
