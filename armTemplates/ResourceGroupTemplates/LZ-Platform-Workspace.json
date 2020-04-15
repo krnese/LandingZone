@@ -219,6 +219,10 @@
                 {
                     "name": "[concat('ServiceMap', '(', parameters('workspaceName'), ')')]",
                     "marketplaceName": "ServiceMap"
+                },
+                {
+                    "name": "[concat('SecurityInsights', '(', parameters('workspaceName'), ')')]",
+                    "marketplaceName": "SecurityInsights"
                 }
             ]
         }
